@@ -11,6 +11,9 @@ export const PAPER_SIZES = {
   A3: { name: "A3", width: 297, height: 420 },
   A2: { name: "A2", width: 420, height: 594 }
 };
+
+export const MARGIN_MM = 10; // 用紙の余白(mm)
+
 export const calculateLayout = (
   imgWidth: number,
   imgHeight: number,
@@ -18,16 +21,17 @@ export const calculateLayout = (
   paperKey: keyof typeof PAPER_SIZES
 ) => {
   const paper = PAPER_SIZES[paperKey];
-  //用紙の縦横比
-  const paperRatio = paper.height / paper.width;
-  //画像上での1ページ当たりの横幅(px)
-  const pieceWidthPx = paper.width / cols;
-  //画像上での1ページ当たりの高さ(px)
-  const pieceHeightPx = pieceWidthPx * paperRatio;
-  //画像の高さを1ページ当たりの高さで割って、必要な行数を計算
-  const rows = Math.ceil(imgHeight / pieceHeightPx);
+  
+  const printableWidthMm = paper.width -  (MARGIN_MM * 2); // 余白を引いた印刷可能幅
+  const printableHeightMm = paper.height - (MARGIN_MM * 2); // 余白を引いた印刷可能高さ
+  
+  const pieceWidthPx = imgWidth / cols; // 1ページあたりの幅(mm)
+  const pieceHeightPx = pieceWidthPx * (printableHeightMm / printableWidthMm);
+
+  // 縦に何枚必要か
+  const rows = Math.max(1, Math.ceil(imgHeight / pieceHeightPx));
   return { 
-    rows,
+    rows: Math.max(1, rows), // 最低でも1枚
     pieceWidthPx,
     pieceHeightPx,
     paperWidthMm: paper.width,
