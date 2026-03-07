@@ -10,9 +10,16 @@ export const calculateLayoutByTarget = (
   imgWidth: number,
   imgHeight: number,
   targetWidthMm: number, // ユーザーが指定する「完成時の横幅」
-  paperKey: keyof typeof PAPER_SIZES
+  paperKey: keyof typeof PAPER_SIZES,
+  paperOrientation: "portrait" | "landscape" = "portrait"
 ) => {
-  const paper = PAPER_SIZES[paperKey];
+  const basePaper = PAPER_SIZES[paperKey];
+  
+  const paper = {
+    width: paperOrientation === "landscape" ? basePaper.width : basePaper.height,
+    height: paperOrientation === "landscape" ? basePaper.height : basePaper.width,
+  }
+  
   const printableWidthMm = paper.width - (MARGIN_MM * 2);
   const printableHeightMm = paper.height - (MARGIN_MM * 2);
 
