@@ -38,6 +38,8 @@ export const calculateLayoutByTarget = (
     pieceHeightPx,
     printableWidthMm,
     printableHeightMm,
+    paperWidthMm: paper.width,   
+    paperHeightMm: paper.height,
     totalPaperCount: cols * rows
   };
 };
