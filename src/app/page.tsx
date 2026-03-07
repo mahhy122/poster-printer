@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { calculateLayoutByTarget, PAPER_SIZES, MARGIN_MM } from '@/lib/calculator';
+import { generatePosterPdf } from '@/lib/pdf';
+
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
@@ -30,6 +32,15 @@ export default function Home() {
         setImgSize({ width: img.width, height: img.height });
       };
       img.src = url;
+    }
+  };
+  const handleDownload = async () => {
+    if (!image || !layout) return;
+    try {
+      await generatePosterPdf(image, layout as any);
+    } catch (error) {
+      console.error('PDF生成に失敗しました:', error);
+      alert('PDFの作成中にエラーが発生しました。');
     }
   };
 
@@ -94,6 +105,7 @@ export default function Home() {
 
         <button 
           disabled={!image}
+          onClick={handleDownload}
           className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:bg-slate-200 disabled:shadow-none"
         >
           PDFを書き出す
