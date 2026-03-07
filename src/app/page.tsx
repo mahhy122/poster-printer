@@ -35,12 +35,16 @@ export default function Home() {
     }
   };
   const handleDownload = async () => {
-    if (!image || !layout) return;
+    if (!image || !layout) {
+      alert("画像を選択してください");
+      return;
+    }
+    console.log("PDF生成を開始します..."); // 起動確認用
     try {
       await generatePosterPdf(image, layout as any);
+      console.log("PDF生成が完了しました");
     } catch (error) {
-      console.error('PDF生成に失敗しました:', error);
-      alert('PDFの作成中にエラーが発生しました。');
+      console.error("PDF生成エラー:", error);
     }
   };
 
