@@ -1,113 +1,95 @@
 'use client';
 
-import { useState, useRef } from 'react';
-
-const PAPER_SIZES = {
-  A4: { name: "A4", width: 210, height: 297 },
-  A3: { name: "A3", width: 297, height: 420 },
-  A2: { name: "A2", width: 420, height: 594 }
-};
+import { useState, useRef, useEffect } from 'react';
+import { calculateLayout, PAPER_SIZES } from '@/lib/calculator';
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
-  const [paperSize, setPaperSize] = useState<string>("A4");
-  const [cols,setCols] = useState(2); //横に何枚並べるか
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
+  const [paperSize, setPaperSize] = useState<'A4' | 'A3'>('A4');
+  const [cols, setCols] = useState(2);
   
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // レイアウト計算の実行
+  const layout = imgSize.width > 0 
+    ? calculateLayout(imgSize.width, imgSize.height, cols, paperSize)
+    : { rows: 0 };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setImage(url);
+      
+      // 画像の元サイズを取得
+      const img = new Image();
+      img.onload = () => {
+        setImgSize({ width: img.width, height: img.height });
+      };
+      img.src = url;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 text-gray-800">
-      {/* --- 左側：操作パネル --- */}
-      <aside className="w-80 bg-white shadow-xl z-10 flex flex-col p-6 overflow-y-auto">
-        <h1 className="text-xl font-bold mb-8 border-b pb-4">ポスター印刷設定</h1>
-
-        <div className="space-y-6 flex-1">
-          {/* 画像選択ボタン */}
+    <div className="flex h-screen bg-gray-100">
+      {/* サイドバー（前回の実装を維持） */}
+      <aside className="w-80 bg-white shadow-xl p-6 flex flex-col">
+        <h1 className="text-xl font-bold mb-8">ポスター印刷設定</h1>
+        <div className="space-y-6">
+          <button onClick={() => fileInputRef.current?.click()} className="w-full py-3 bg-blue-600 text-white rounded-lg">
+            画像を選択
+          </button>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+          
           <div>
-            <label className="text-sm font-semibold text-gray-600 block mb-2">1. 画像の準備</label>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              accept="image/*" 
-              onChange={handleFileChange} 
-              className="hidden" 
-            />
-            <button
-              onClick={handleButtonClick}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-md active:scale-95"
-            >
-              {image ? '画像を貼り替える' : '画像を選択する'}
-            </button>
-          </div>
-
-          {/* 用紙設定 */}
-          <div>
-            <label className="text-sm font-semibold text-gray-600 block mb-2">2. 用紙サイズ</label>
-            <select 
-              value={paperSize} 
-              onChange={(e) => setPaperSize(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-blue-500 outline-none transition-colors"
-            >
-              <option value="A4">A4 (210x297mm)</option>
-              <option value="A3">A3 (297x420mm)</option>
+            <label className="text-sm font-bold block mb-2">用紙サイズ</label>
+            <select value={paperSize} onChange={(e) => setPaperSize(e.target.value as any)} className="w-full border p-2 rounded">
+              <option value="A4">A4</option>
+              <option value="A3">A3</option>
             </select>
           </div>
 
-          {/* 分割数設定 */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 block mb-2">3. 横の分割枚数</label>
-            <div className="flex items-center gap-3">
-              <input 
-                type="number" 
-                min="1" 
-                max="10"
-                value={cols} 
-                onChange={(e) => setCols(Number(e.target.value))}
-                className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-blue-500 outline-none"
-              />
-              <span className="text-sm text-gray-500 whitespace-nowrap">枚</span>
-            </div>
+            <label className="text-sm font-bold block mb-2">横の分割数: {cols}枚</label>
+            <input type="range" min="1" max="5" value={cols} onChange={(e) => setCols(Number(e.target.value))} className="w-full" />
           </div>
         </div>
-
-        {/* 実行ボタン（下部に配置） */}
-        <button
-          disabled={!image}
-          className="mt-8 w-full py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg"
-        >
-          PDFを生成して保存
-        </button>
+        
+        <div className="mt-auto p-4 bg-blue-50 rounded-lg text-xs text-blue-800">
+          構成: 横{cols}枚 × 縦{layout.rows}枚<br/>
+          合計枚数: {cols * (layout.rows || 0)}枚
+        </div>
       </aside>
 
-      {/* --- 右側：メインプレビューエリア --- */}
-      <main className="flex-1 overflow-auto flex items-center justify-center p-12">
+      {/* メインプレビュー */}
+      <main className="flex-1 flex items-center justify-center p-12 overflow-auto">
         {image ? (
-          <div className="relative group">
-            <div className="absolute -top-8 left-0 text-xs text-gray-400 font-mono">
-              PREVIEW MODE: {paperSize} x {cols}
+          <div className="relative shadow-2xl border-8 border-white bg-white">
+            <img src={image} alt="Preview" className="max-h-[70vh] w-auto block" />
+            
+            {/* グリッド線オーバーレイ */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {/* 縦線 */}
+              {[...Array(cols - 1)].map((_, i) => (
+                <div 
+                  key={`v-${i}`} 
+                  className="absolute h-full border-l border-dashed border-red-500/50"
+                  style={{ left: `${(100 / cols) * (i + 1)}%` }}
+                />
+              ))}
+              {/* 横線 */}
+              {layout.rows && layout.rows > 1 && [...Array(layout.rows - 1)].map((_, i) => (
+                <div 
+                  key={`h-${i}`} 
+                  className="absolute w-full border-t border-dashed border-red-500/50"
+                  style={{ top: `${(100 / layout.rows!) * (i + 1)}%` }}
+                />
+              ))}
             </div>
-            <img 
-              src={image} 
-              alt="Preview" 
-              className="max-h-[80vh] w-auto shadow-2xl rounded-sm border-4 border-white" 
-            />
-            {/* ここに分割線のオーバーレイを後で追加できます */}
           </div>
         ) : (
-          <div className="text-center text-gray-400">
-            <div className="text-6xl mb-4">🖼️</div>
-            <p className="text-lg">画像を選択するとここにプレビューが表示されます</p>
-          </div>
+          <p className="text-gray-400">画像を選択してください</p>
         )}
       </main>
     </div>
