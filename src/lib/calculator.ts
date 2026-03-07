@@ -11,7 +11,7 @@ export const PAPER_SIZES = {
   A3: { name: "A3", width: 297, height: 420 },
   A2: { name: "A2", width: 420, height: 594 }
 };
-export const calcilateLeyout = (
+export const calculateLayout = (
   imgWidth: number,
   imgHeight: number,
   cols: number,
