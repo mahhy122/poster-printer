@@ -35,6 +35,9 @@ export default function Home() {
     }
   };
   const handleDownload = async () => {
+    console.log("DEBUG: ボタンがクリックされました");
+    console.log("DEBUG: imageの状態 =", !!image);
+    console.log("DEBUG: layoutの状態 =", layout);
     if (!image || !layout) {
       alert("画像を選択してください");
       return;
@@ -106,7 +109,7 @@ export default function Home() {
             </div>
           )}
         </div>
-
+        
         <button 
           disabled={!image}
           onClick={handleDownload}
