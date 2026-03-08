@@ -34,69 +34,76 @@ export default function Home() {
   };
 
   const rotateImage = async () => {
-    if(!image) return;
+    if (!image) return;
     const img = new Image();
     img.src = image;
-    await new Promise((resolve) => {img.onload = resolve;});
-    
+    await new Promise((resolve) => { img.onload = resolve; });
+
     const canvas = document.createElement('canvas');
     canvas.width = img.height;
     canvas.height = img.width;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(Math.PI / 2);
+    ctx.rotate((90 * Math.PI) / 180);
     ctx.drawImage(img, -img.width / 2, -img.height / 2);
-    
-    canvas.toBlob((blob) =>{
+
+    canvas.toBlob((blob) => {
       if (blob) {
-        const rotatedUrl = URL.createObjectURL(blob);
-        setImage(rotatedUrl);
+        const url = URL.createObjectURL(blob);
+        setImage(url);
         setImgSize({ width: canvas.width, height: canvas.height });
       }
     }, 'image/jpeg', 1.0);
   };
 
   const handleDownload = async () => {
-    console.log("DEBUG: ボタンがクリックされました");
-    console.log("DEBUG: imageの状態 =", !!image);
-    console.log("DEBUG: layoutの状態 =", layout);
     if (!image || !layout) {
       alert("画像を選択してください");
       return;
     }
-    console.log("PDF生成を開始します..."); 
     try {
       await generatePosterPdf(image, layout as any);
-      console.log("PDF生成が完了しました");
     } catch (error) {
-      console.error("PDF生成エラー:", error);
+      alert("PDFの作成中にエラーが発生しました。");
+      console.error(error);
     }
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900">
-      <aside className="w-90 bg-white shadow-2xl p-6 flex flex-col z-20 overflow-y-auto">
-        <h1 className="text-2xl font-black mb-8 tracking-tight text-blue-600">POSTER MAKER</h1>
+    <div className="flex h-screen bg-slate-100 text-slate-800 font-sans">
+      {/* サイドバー */}
+      <aside className="w-95 bg-white shadow-xl p-6 flex flex-col z-20 overflow-y-auto border-r border-slate-200">
+        <div className="mb-8">
+          <h1 className="text-2xl font-black tracking-tight text-blue-600 flex items-center gap-2">
+            <span className="text-3xl">🖨️</span> ポスターメーカー
+          </h1>
+          <p className="text-xs text-slate-500 mt-2 font-medium">手持ちの画像を分割して、巨大ポスターを印刷</p>
+        </div>
         
-        <div className="space-y-6 grow">
+        <div className="space-y-8 grow">
+          
+          {/* STEP 1: 画像選択 */}
           <section>
-            <label className="text-xs font-bold uppercase text-slate-400 mb-2 block">1. Source Image</label>
+            <label className="flex items-center gap-2 font-bold text-slate-700 mb-3">
+              <span className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">1</span>
+              ポスターにする画像
+            </label>
             <div className="flex gap-2">
               <button 
                 onClick={handleButtonClick}
-                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-semibold transition-all border-2 border-dashed border-slate-300"
+                className="flex-1 py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-bold transition-all border-2 border-blue-200"
               >
-                {image ? '画像を入れ替える' : '画像を選択'}
+                {image ? '画像を入れ替える' : '画像を選ぶ'}
               </button>
               <button
                 onClick={rotateImage}
                 disabled={!image}
-                className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold transition-all border-2 border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-sm font-bold transition-all border-2 border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="90度回転"
               >
                 ↻ 回転
@@ -105,52 +112,76 @@ export default function Home() {
             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
           </section>
 
+          {/* STEP 2: サイズ指定 */}
           <section>
-            <label className="text-xs font-bold uppercase text-slate-400 mb-2 block">2. Target Width (mm)</label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="number"
-                value={targetWidthMm}
-                onChange={(e) => setTargetWidthMm(Number(e.target.value))}
-                className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg p-3 font-mono text-lg focus:border-blue-500 outline-none"
-              />
-              <span className="font-bold text-slate-500">mm</span>
+            <label className="flex items-center gap-2 font-bold text-slate-700 mb-3">
+              <span className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</span>
+              完成時のサイズ（横幅）
+            </label>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number"
+                  value={targetWidthMm}
+                  onChange={(e) => setTargetWidthMm(Number(e.target.value))}
+                  className="flex-1 bg-white border-2 border-slate-300 rounded-lg p-3 font-mono text-xl text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                />
+                <span className="font-bold text-slate-500 w-8">mm</span>
+              </div>
+              <p className="text-right text-xs text-slate-500 font-medium pr-10">
+                （＝ {targetWidthMm / 10} cm）
+              </p>
             </div>
           </section>
 
+          {/* STEP 3: 用紙設定 */}
           <section>
-            <label className="text-xs font-bold uppercase text-slate-400 mb-2 block">3. Print Paper & Orientation</label>
+            <label className="flex items-center gap-2 font-bold text-slate-700 mb-3">
+              <span className="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">3</span>
+              家のプリンターの用紙
+            </label>
             <div className="flex gap-2">
               <select 
                 value={paperSize} 
                 onChange={(e) => setPaperSize(e.target.value as any)}
-                className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg p-3 font-semibold focus:border-blue-500 outline-none"
+                className="flex-1 bg-white border-2 border-slate-300 rounded-lg p-3 font-semibold focus:border-blue-500 outline-none cursor-pointer"
               >
                 {Object.keys(PAPER_SIZES).map(key => (
-                  <option key={key} value={key}>{key} Paper</option>
+                  <option key={key} value={key}>{key} サイズ</option>
                 ))}
               </select>
               <select 
                 value={paperOrientation} 
                 onChange={(e) => setPaperOrientation(e.target.value as any)}
-                className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-lg p-3 font-semibold focus:border-blue-500 outline-none"
+                className="flex-1 bg-white border-2 border-slate-300 rounded-lg p-3 font-semibold focus:border-blue-500 outline-none cursor-pointer"
               >
-                <option value="portrait">縦 (Portrait)</option>
-                <option value="landscape">横 (Landscape)</option>
+                <option value="portrait">縦向き</option>
+                <option value="landscape">横向き</option>
               </select>
             </div>
           </section>
 
+          {/* 出力結果プレビュー */}
           {layout && (
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 italic">
-              <h3 className="text-blue-800 font-bold text-sm mb-2">出力プレビュー情報</h3>
-              <div className="grid grid-cols-2 gap-y-2 text-xs">
-                <span className="text-blue-600/70">完成高さ:</span>
-                <span className="font-mono font-bold">{(layout.targetHeightMm / 10).toFixed(1)} cm</span>
-                <span className="text-blue-600/70">必要枚数:</span>
-                <span className="font-mono font-bold">{layout.totalPaperCount} 枚</span>
-                <span className="text-blue-600/70">レイアウト:</span>
-                <span className="font-mono font-bold">{layout.cols}列 × {layout.rows}行</span>
+            <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+              <h3 className="text-slate-700 font-bold text-sm mb-3 flex items-center gap-1">
+                <span>📋</span> 仕上がり予定
+              </h3>
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                <span className="text-slate-500">完成サイズ:</span>
+                <span className="font-bold text-slate-800 text-right">
+                  横{(targetWidthMm / 10).toFixed(1)} × 縦{(layout.targetHeightMm / 10).toFixed(1)} cm
+                </span>
+                
+                <span className="text-slate-500">印刷する枚数:</span>
+                <span className="font-bold text-blue-600 text-right text-lg">
+                  計 {layout.totalPaperCount} 枚
+                </span>
+                
+                <span className="text-slate-500">貼り合わせ:</span>
+                <span className="font-bold text-slate-800 text-right">
+                  横 {layout.cols}枚 × 縦 {layout.rows}枚
+                </span>
               </div>
             </div>
           )}
@@ -159,41 +190,38 @@ export default function Home() {
         <button 
           disabled={!image}
           onClick={handleDownload}
-          className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:bg-slate-200 disabled:shadow-none"
+          className="mt-6 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-600/30 transition-all active:scale-95 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none flex justify-center items-center gap-2"
         >
-          PDFを書き出す
+          {image ? '📄 PDFをダウンロード' : 'まずは画像を選んでください'}
         </button>
       </aside>
 
-      {/* メインエリア */}
-      <main className="flex-1 bg-slate-100 flex items-center justify-center p-16 overflow-auto">
+      {/* メインエリア（プレビュー） */}
+      <main className="flex-1 bg-slate-200/50 flex items-center justify-center p-12 overflow-auto relative">
         {image && layout ? (
-          <div className="relative shadow-[0_20px_50px_rgba(8,112,184,0.1)] bg-white p-1 border-4 border-white transition-all duration-300">
-            <img src={image} alt="Preview" className="max-h-[75vh] w-auto block opacity-90" />
-
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="relative shadow-[0_20px_50px_rgba(0,0,0,0.15)] bg-white p-2 border border-slate-200 transition-all duration-300">
+            <img src={image} alt="Preview" className="max-h-[80vh] w-auto block opacity-95" />
+            
+            {/* 分割線 */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden m-2">
               {[...Array(layout.cols)].map((_, i) => {
-                // 用紙の幅が、ターゲット全体幅の何%にあたるかを計算
                 const leftPercent = ((layout.printableWidthMm * (i + 1)) / targetWidthMm) * 100;
-                // 100%（画像の右端）を超える線は描画しない
                 if (leftPercent >= 100) return null;
                 return (
                   <div 
                     key={`v-${i}`} 
-                    className="absolute h-full border-l-2 border-blue-500/60 border-dashed" 
+                    className="absolute h-full border-l-2 border-blue-500/80 border-dashed drop-shadow-md" 
                     style={{ left: `${leftPercent}%` }} 
                   />
                 );
               })}
               {[...Array(layout.rows)].map((_, i) => {
-                // 用紙の高さが、ターゲット全体高さの何%にあたるかを計算
                 const topPercent = ((layout.printableHeightMm * (i + 1)) / layout.targetHeightMm) * 100;
-                // 100%（画像の下端）を超える線は描画しない
                 if (topPercent >= 100) return null;
                 return (
                   <div 
                     key={`h-${i}`} 
-                    className="absolute w-full border-t-2 border-blue-500/60 border-dashed" 
+                    className="absolute w-full border-t-2 border-blue-500/80 border-dashed drop-shadow-md" 
                     style={{ top: `${topPercent}%` }} 
                   />
                 );
@@ -201,11 +229,12 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="text-center">
-            <div className="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl text-slate-400">🖼️</span>
+          <div className="text-center flex flex-col items-center">
+            <div className="w-32 h-32 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center mb-6">
+              <span className="text-6xl">🖼️</span>
             </div>
-            <p className="text-slate-400 font-medium">画像を選択するとプレビューが表示されます</p>
+            <h2 className="text-xl font-bold text-slate-600 mb-2">プレビューエリア</h2>
+            <p className="text-slate-500 font-medium">左側のメニューから画像を選ぶと、<br/>ここに分割のイメージが表示されます。</p>
           </div>
         )}
       </main>
