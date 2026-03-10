@@ -60,7 +60,9 @@ export const generatePosterPdf = async (
         layout.printableWidthMm,
         layout.printableHeightMm
       );
-
+      pdf.setDrawColor(180, 220, 255); // 薄い青色の指定（R:180, G:220, B:255）
+      pdf.setLineWidth(0.3); // 線の太さ（0.3mm）
+      pdf.rect(MARGIN_MM, MARGIN_MM, layout.printableWidthMm, layout.printableHeightMm);
       // 番号付け
       pdf.setFontSize(8);
       pdf.setTextColor(150);
