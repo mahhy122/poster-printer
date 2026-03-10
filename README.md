@@ -3,6 +3,8 @@
 デプロイしました
 https://poster-printer.vercel.app/
 
+更新（2026/03/11）余白の色を白色に変更
+
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
