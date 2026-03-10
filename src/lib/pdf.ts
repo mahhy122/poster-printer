@@ -38,9 +38,8 @@ export const generatePosterPdf = async (
   for (let r = 0; r < layout.rows; r++) {
     for (let c = 0; c < layout.cols; c++) {
       if (r > 0 || c > 0) pdf.addPage();
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       // すでに読み込まれている要素から直接描画（読み込み待機が不要）
       ctx.drawImage(
         previewImg,
