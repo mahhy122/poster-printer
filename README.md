@@ -1,5 +1,8 @@
 発表用ポスターをはじめとする通常のコピー機で印刷できないサイズの画像をコピー用紙サイズに分割しPDF化し保存するプログラムです
 
+デプロイしました
+https://poster-printer.vercel.app/
+
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
